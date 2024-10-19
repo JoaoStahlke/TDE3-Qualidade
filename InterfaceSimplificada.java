@@ -40,7 +40,6 @@ public class InterfaceSimplificada extends JFrame {
 
     private JPanel criarPainelVisualizacao() {
         JPanel painel = new JPanel(new BorderLayout(10, 10));
-
         // Painel superior com filtros e indicador de conformidade
         JPanel painelSuperior = new JPanel(new BorderLayout(10, 10));
 

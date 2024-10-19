@@ -55,11 +55,14 @@ public class RegistroSimplificado {
 
     public void adicionar(String descricao, String responsavel, String prioridade, String status) {
         int tempoCorrecao = calcularTempoCorrecao(prioridade);
-        NaoConformidadeSimplificada nc = new NaoConformidadeSimplificada(proximoId, descricao, responsavel, prioridade, status, tempoCorrecao);
+        LocalDate dataPrevisaoCorrecao = LocalDate.now().plusDays(tempoCorrecao);
+        NaoConformidadeSimplificada nc = new NaoConformidadeSimplificada(proximoId, descricao, responsavel, prioridade, status, tempoCorrecao, dataPrevisaoCorrecao);
         registros.add(nc);
         proximoId++;
         salvarRegistros();
-        enviarEmailNotificacao(nc);
+        if (status.equals("Não conforme")) {
+            enviarEmailNotificacao(nc);
+        }
     }
 
     private int calcularTempoCorrecao(String prioridade) {
@@ -76,7 +79,7 @@ public class RegistroSimplificado {
     }
 
     private void enviarEmailNotificacao(NaoConformidadeSimplificada nc) {
-        String to = "alexandretestespuc@gmail.com"; // Altere para o domínio de e-mail apropriado
+        String to = nc.getResponsavel() + "@gmail.com"; // Altere para o domínio de e-mail apropriado
         String from = "alexandretestespuc@gmail.com"; // Seu endereço de e-mail
         final String username = "alexandretestespuc@gmail.com"; // Seu endereço de e-mail
         final String password = "ohrz blcx xvis zltp"; // Sua senha de aplicativo
@@ -93,7 +96,6 @@ public class RegistroSimplificado {
             message.setFrom(new InternetAddress(from));
             message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
             message.setSubject("Nova Não Conformidade Registrada - ID: " + nc.getId());
-            // Criando o conteúdo do e-mail em formato HTML
             String htmlContent = String.format(
                     "<html>" +
                             "<head>" +
@@ -114,6 +116,7 @@ public class RegistroSimplificado {
                             "<tr><th>Prioridade</th><td>%s</td></tr>" +
                             "<tr><th>Tempo para correção</th><td>%d dias</td></tr>" +
                             "<tr><th>Data de criação</th><td>%s</td></tr>" +
+                            "<tr><th>Data prevista para correção</th><td>%s</td></tr>" +
                             "</table>" +
                             "<p>Por favor, tome as medidas necessárias para corrigir esta não conformidade dentro do prazo estabelecido.</p>" +
                             "<p>Este é um e-mail automático. Não responda a esta mensagem.</p>" +
@@ -123,7 +126,8 @@ public class RegistroSimplificado {
                     nc.getDescricao(),
                     nc.getPrioridade(),
                     nc.getTempoCorrecao(),
-                    nc.getDataCriacao().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                    nc.getDataCriacao().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                    nc.getDataPrevisaoCorrecao().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
             );
 
             // Configurando o conteúdo da mensagem como HTML

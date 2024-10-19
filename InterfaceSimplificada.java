@@ -3,6 +3,8 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.table.DefaultTableModel;
 import java.util.ArrayList;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
 
 public class InterfaceSimplificada extends JFrame {
     private RegistroSimplificado registro;
@@ -14,6 +16,8 @@ public class InterfaceSimplificada extends JFrame {
     private JTextField responsavelField;
     private JComboBox<String> prioridadeComboBox;
     private JLabel indicadorConformidade;
+    private JLabel auditoriaLabel;
+    private JTextField projetoField;
 
     public InterfaceSimplificada() {
         registro = new RegistroSimplificado();
@@ -24,7 +28,7 @@ public class InterfaceSimplificada extends JFrame {
 
     private void configurarJanela() {
         setTitle("Gestão de Não Conformidades - Versão Simplificada");
-        setSize(1000, 600);
+        setSize(1000, 650); // Aumentado a altura para acomodar os novos campos
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
     }
@@ -40,29 +44,45 @@ public class InterfaceSimplificada extends JFrame {
 
     private JPanel criarPainelVisualizacao() {
         JPanel painel = new JPanel(new BorderLayout(10, 10));
-        // Painel superior com filtros e indicador de conformidade
+
+        // Painel superior com novos campos, filtros e indicador de conformidade
         JPanel painelSuperior = new JPanel(new BorderLayout(10, 10));
+
+        // Painel para auditoria e projeto
+        JPanel painelAuditoriaProjeto = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
+        // Campo Auditoria do dia
+        LocalDate hoje = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        auditoriaLabel = new JLabel("Auditoria do dia: " + hoje.format(formatter));
+        painelAuditoriaProjeto.add(auditoriaLabel);
+
+        // Campo Projeto
+        JLabel projetoLabel = new JLabel("Projeto:");
+        projetoField = new JTextField(20);
+        painelAuditoriaProjeto.add(projetoLabel);
+        painelAuditoriaProjeto.add(projetoField);
+
+        painelSuperior.add(painelAuditoriaProjeto, BorderLayout.NORTH);
 
         // Painel de filtros
         JPanel painelFiltros = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JComboBox<String> filtroStatus = new JComboBox<>(new String[]{"Todos", "Não conforme", "Conforme", "Não se aplica"});
-
         filtroStatus.addActionListener(e -> atualizarTabela(filtroStatus.getSelectedItem().toString()));
-
         painelFiltros.add(new JLabel("Filtrar por status:"));
         painelFiltros.add(filtroStatus);
+
+        painelSuperior.add(painelFiltros, BorderLayout.CENTER);
 
         // Painel do indicador de conformidade
         JPanel painelIndicador = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         indicadorConformidade = new JLabel();
         painelIndicador.add(indicadorConformidade);
 
-        // Adiciona os painéis ao painel superior
-        painelSuperior.add(painelFiltros, BorderLayout.WEST);
-        painelSuperior.add(painelIndicador, BorderLayout.EAST);
+        painelSuperior.add(painelIndicador, BorderLayout.SOUTH);
 
         // Tabela
-        String[] colunas = {"ID", "Descrição", "Responsável", "Prioridade", "Status", "Data Criação"};
+        String[] colunas = {"ID", "Descrição", "Responsável", "Prioridade", "Status", "Data Criação", "Previsão de Correção"};
         modeloTabela = new DefaultTableModel(colunas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -232,6 +252,8 @@ public class InterfaceSimplificada extends JFrame {
         modeloTabela.setRowCount(0);
         ArrayList<NaoConformidadeSimplificada> lista = registro.listarPorStatus(filtroStatus);
 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
         for (NaoConformidadeSimplificada nc : lista) {
             modeloTabela.addRow(new Object[]{
                     nc.getId(),
@@ -239,8 +261,8 @@ public class InterfaceSimplificada extends JFrame {
                     nc.getResponsavel(),
                     nc.getPrioridade(),
                     nc.getStatus(),
-                    nc.getDataCriacao(),
-                    nc.getDataFechamento()
+                    nc.getDataCriacao().format(formatter),
+                    nc.getDataPrevisaoCorrecao().format(formatter)
             });
         }
 
